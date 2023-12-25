@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>TUBE DES ORPHELINS</title>
+    <style>
+          .message-roméo {
+            color: white;
+        }
+
+        .message-cacamille {
+            color: lime;
+        }
+
+        @font-face {
+            font-family: 'Minitel';
+            src: url('minitel.ttf') format('truetype'); /* Assurez-vous que le chemin est correct */
+        }
+        
+pre {
+    font-family: 'Courier New', monospace; /* Ou une autre police monospace */
+    color: lime;
+    white-space: pre; /* Garde la mise en forme du texte */
+    font-size: 12px; /* Ajustez la taille selon vos besoins */
+    line-height: 1; /* Ajustez l'espacement des lignes si nécessaire */
+    text-align: center; /* Pour centrer le texte ASCII */
+}
+
+        body {
+            font-family: 'Minitel', monospace;
+            background-color: black;
+            color: lime;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        h1 {
+            font-size: 2em;
+        }
+        #chatbox {
+            width: 80%;
+            height: 300px;
+            overflow: auto;
+            border: 1px solid #0f0;
+            margin-bottom: 10px;
+            padding: 5px;
+            background-color: black;
+        }
+        input, button {
+            font-family: 'Minitel', monospace;
+            background-color: black;
+            color: lime;
+            border: 1px solid lime;
+            padding: 5px;
+            margin-top: 5px;
+        }
+        input:focus {
+            outline: none;
+            caret-color: lime;
+            animation: blink-caret .75s step-end infinite;
+        }
+        @keyframes blink-caret {
+            from, to { caret-color: transparent }
+            50% { caret-color: lime; }
+        }
+        #logo {
+            width: 100px; /* Ajustez selon la taille de votre logo */
+            height: auto;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+     <img id="logo" src="logo.png" alt="Logo Rétro"> <!-- Assurez-vous que le chemin est correct -->
+     <pre>
+ / ___| |__   __ _| |_    __| | ___  ___   
+| |   | '_ \ / _` | __|  / _` |/ _ \/ __|  
+| |___| | | | (_| | |_  | (_| |  __/\__ \  
+ \____|_| |_|\__,_|\__|  \__,_|\___||___/  
+  ___  _ __ _ __ | |__   ___| (_)_ __  ___ 
+ / _ \| '__| '_ \| '_ \ / _ \ | | '_ \/ __|
+| (_) | |  | |_) | | | |  __/ | | | | \__ \
+ \___/|_|  | .__/|_| |_|\___|_|_|_| |_|___/
+    </pre>
+    <h1>-----</h1>
+    <div id="chatbox"></div>
+    <input type="text" id="message" placeholder="Message">
+    <button onclick="sendMessage()">Send</button>
+
+    <script>
+          let username;
+
+        while (!username) {
+            username = prompt("Enter your username (Cacamille or Roméo):");
+            if (username !== "Cacamille" && username !== "Roméo") {
+                alert("Please enter either 'Cacamille' or 'Roméo' as username.");
+                username = null;
+            }
+        }
+
+        function updateChat() {
+            fetch('/receive').then(response => response.json()).then(data => {
+                let chatbox = document.getElementById('chatbox');
+                chatbox.innerHTML = '';
+                data.forEach(msg => {
+                    let messageDiv = document.createElement('div');
+                    messageDiv.textContent = `${msg.timestamp} - ${msg.username}: ${msg.message}`;
+                    messageDiv.className = msg.username === 'Roméo' ? 'message-roméo' : 'message-cacamille';
+                    chatbox.appendChild(messageDiv);
+                });
+                chatbox.scrollTop = chatbox.scrollHeight;
+            });
+        }
+
+
+        function sendMessage() {
+            let message = document.getElementById('message').value;
+            fetch('/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ username: username, message: message }),
+            }).then(response => {
+                document.getElementById('message').value = '';
+                updateChat();
+            });
+        }
+
+        // Gestionnaire d'événements pour la touche Entrée
+        document.getElementById('message').addEventListener('keypress', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+
+        setInterval(updateChat, 1000);
+    </script>
+</body>
+</html>
